@@ -1,0 +1,6 @@
+{
+    "description": "Template used by KorANI.",
+    "prompt_input": "아래는 작업을 설명하는 지시사항과 작업에 대한 추가적인 맥락을 제공하는 입력이 함께 제공되는 것입니다. 적절히 작업을 완료하는 응답을 작성해주세요.\n\n### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n",
+    "prompt_no_input": "아래에는 작업을 설명하는 지시사항이 있습니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### Instruction:\n{instruction}\n\n### Response:\n",
+    "response_split": "### Response:"    
+}

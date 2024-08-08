@@ -1,0 +1,6 @@
+{
+    "description": "Template used by KoAlpaca-Polyglot.",
+    "prompt_input": "아래는 작업을 설명하는 지시사항과 작업에 대한 추가적인 맥락을 제공하는 입력이 함께 제공되는 것입니다. 적절히 작업을 완료하는 응답을 작성해주세요.\n\n### 질문:\n{instruction}\n\n### 맥락:\n{input}\n\n### 답변:\n",
+    "prompt_no_input": "아래에는 작업을 설명하는 지시사항이 있습니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 질문:\n{instruction}\n\n### 답변:\n",
+    "response_split": "### 답변:"    
+}
