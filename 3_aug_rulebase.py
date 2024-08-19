@@ -4,16 +4,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import re
 import json
 from tqdm import tqdm
-import time
 import random
-import pandas as pd
-import numpy as np
-import copy
-import string
-from pprint import pprint
-from joblib import Parallel, delayed
-
-from module.synonym import generate_synonym
 #%%
 """
 data load

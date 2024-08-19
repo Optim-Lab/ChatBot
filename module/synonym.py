@@ -1,8 +1,6 @@
 #%%
 import re
-import json
 import openai
-from tqdm import tqdm
 # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_handle_rate_limits.ipynb
 from tenacity import (
     retry,
@@ -15,7 +13,7 @@ def generate_synonym(instruction, cred="./assets/cred/chatGPT_api_key.txt"):
     response_message = response.choices[0]["message"]["content"]
     response_message = response_message.split('\n')
     
-    delimiter = '|'.join([f'{i+1}번.' for i in range(9)])
+    delimiter = '|'.join([f'{i+1}번.' for i in range(5)])
     
     syn_list = []
     for message in response_message:
@@ -25,7 +23,7 @@ def generate_synonym(instruction, cred="./assets/cred/chatGPT_api_key.txt"):
 
 
 def chat(sample, cred="./assets/cred/chatGPT_api_key.txt"):
-    openai.api_key_path = cred
+    openai.api_key_path = cred ### API key 경로 입력
     if sample is None:
         raise ValueError
 
@@ -58,12 +56,17 @@ def chat(sample, cred="./assets/cred/chatGPT_api_key.txt"):
         {"role": "user", "content": prompt}])
 
     @retry(
-        wait=wait_random_exponential(min=1, max=60), 
-        stop=stop_after_attempt(100))
+        wait=wait_random_exponential(min=1, max=60), ### API 호출 사이의 시간 간격은 지수분포로부터 샘플링
+        stop=stop_after_attempt(100)) ### 오류가 발생하더라도 100번을 시도
     def completions_with_backoff(**kwargs):
-        return openai.ChatCompletion.create(**kwargs)
+        return openai.ChatCompletion.create(**kwargs) ### 실제로 답변을 생성하는 함수
     response = completions_with_backoff(
         model="gpt-4o-mini", messages=messages)
     
     return response
+#%%
+sample = "3D 창작터 운영 및 관리"
+response = chat(sample)
+response_message = response.choices[0]["message"]["content"]
+response_message = response_message.split('\n')
 #%%
