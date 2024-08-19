@@ -258,10 +258,9 @@ gr.Interface(
             label="Output",
         )
     ],
-    title="KorANI v.0",
+    title="[서울시립대학교 업무분장표 ChatBot] v.0",
     description="""
-    [서울시립대학교 업무분장표 ChatBot]
-    KorANI: Korean Aritificial Natural-language Intelligence
+    Instruction-tuning을 활용한 Large Language Model 기반의 특정 도메인 맞춤형 챗봇 개발
     """,
     # allow_flagging="auto",
 ).queue().launch(server_name=server_name, share=share_gradio, server_port=7860)
