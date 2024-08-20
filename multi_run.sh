@@ -9,10 +9,7 @@ RUN_SRC=./run_src.sh
 # file directory of experiment ".py"
 EXECUTION_FILE=/home1/prof/jeon/KorANI/finetune.py
 
-# DATA_ROOT=./assets/data/v.1.2.5/initial_data_type1.json
-DATA_ROOT=(
-"./assets/data/v.1.2.12/tox_initial_data.json"
-)
+DATA_ROOT=./assets/data/v.1.2.5/initial_data.json
 
 DATA_ROOT_ARGS=--data-path
 
@@ -33,5 +30,5 @@ for index in ${!DATA_ROOT[*]}; do
 done
 # for index in ${!experiments[*]}; do
 #     sbatch --job-name=$DEFAULT_NAME$index $RUN_SRC $ENV $EXECUTION_FILE ${experiments[$index]} $DATA_ROOT_ARGS $DATA_ROOT
-#     sleep 30
+#     sleep 60
 # done

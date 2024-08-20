@@ -85,29 +85,26 @@ def generate_templates(inst): # random sampling
         f"{inst}을 책임지고 계신 사람은 누구신지요?"
     ], 1)
 #%%
-"""
-Feature Engineering - build instruction dictionary using 9 basic templates
-"""
-with open(f"{data_dir}/augmented_work.json", "r", encoding="utf-8") as f:
-    augmented = json.load(f)
+# """
+# Feature Engineering - build instruction dictionary using 9 basic templates
+# """
+# with open(f"{data_dir}/augmented_work.json", "r", encoding="utf-8") as f:
+#     augmented = json.load(f)
 
-initial_dict = {}
-for i, (name, inst) in tqdm(enumerate(augmented.items())):
-    all_inst = []
-    for j in range(len(inst)):
-        all_inst.append(generate_templates(inst[j])[0])
-    initial_dict[name] = all_inst
+# training_dict = {}
+# for i, (name, inst) in tqdm(enumerate(augmented.items())):
+#     all_inst = []
+#     for j in range(len(inst)):
+#         all_inst.append(generate_templates(inst[j])[0])
+#     training_dict[name] = all_inst
 
-with open(f"{data_dir}/initial_dict.json", "w", encoding="utf-8") as f:
-    json.dump(initial_dict, f, ensure_ascii=False, indent=4)
+# with open(f"{data_dir}/training_dict.json", "w", encoding="utf-8") as f:
+#     json.dump(training_dict, f, ensure_ascii=False, indent=4)
 #%%
 """
-Feature Engineering - build instruction-tuning dataset
+Feature Engineering - build instruction-tuning dataset using 9 basic templates
 """
-with open(f"{data_dir}/initial_dict.json", "r", encoding="utf-8") as f:
-    initial_dict = json.load(f)
-
-initial_data = []
+training_data = []
 for i, (name, inst) in tqdm(enumerate(augmented.items())):
     all_inst = []
     for j in range(len(inst)):
@@ -118,10 +115,10 @@ for i, (name, inst) in tqdm(enumerate(augmented.items())):
         synth_sample["instruction"] = inst.strip()
         synth_sample["input"] = ""
         synth_sample["output"] = default_output.get(name).strip()
-        initial_data.append(synth_sample)
+        training_data.append(synth_sample)
 
-with open(f"{data_dir}/initial_data.json", "w", encoding="utf-8") as f:
-    json.dump(initial_data, f, ensure_ascii=False, indent=4)
+with open(f"{data_dir}/training_data.json", "w", encoding="utf-8") as f:
+    json.dump(training_data, f, ensure_ascii=False, indent=4)
     
-print(f"Initial samples number: {len(initial_data)}")
+print(f"Initial samples number: {len(training_data)}")
 #%%
