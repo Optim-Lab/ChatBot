@@ -200,3 +200,32 @@ if __name__ == "__main__":
     with open(f"{save_dir}/train_config.json", "w", encoding="utf-8") as f:
         json.dump(train_cfgs, f, ensure_ascii=False, indent=4)
 #%%
+"""학습 데이터 확인"""
+# prompt_template_name = "korani"
+# prompter = Prompter(prompt_template_name)
+
+# from transformers import AutoTokenizer
+# base_model = "beomi/KoAlpaca-Polyglot-5.8B"
+# tokenizer = AutoTokenizer.from_pretrained(base_model)
+# if tokenizer.pad_token_id is None:
+#     tokenizer.pad_token_id = tokenizer.eos_token_id
+
+# train_data, val_data = split_dataset(
+#     data_path="./assets/data/training_data.json",
+#     val_set_size=512,
+#     cutoff_len=256,
+#     tokenizer=tokenizer,
+#     prompter=prompter,
+#     train_on_inputs=False,
+#     add_eos_token=False,
+#     seed=42,
+# )
+
+# sample = next(iter(train_data)) ### 실제 input
+
+# tokenizer.decode(sample["input_ids"]) ### 실제 input의 decode 결과
+
+# tokenizer.decode([sample["input_ids"][i] for i, x in enumerate(sample["labels"]) if x == -100]) ### LLM에게 주어지는 부분
+
+# tokenizer.decode([x for x in sample["labels"] if x != -100]) ### LLM이 예측해야하는 부분
+#%%
