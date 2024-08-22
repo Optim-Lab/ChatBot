@@ -9,7 +9,8 @@ RUN_SRC=./run_src.sh
 # file directory of experiment ".py"
 EXECUTION_FILE=/home1/prof/jeon/KorANI/finetune.py
 
-DATA_ROOT=./assets/data/v.1.2.5/initial_data.json
+DATA_ROOT=./assets/data/training_data.json
+# DATA_ROOT=./assets/data/pretrained/training_data.json ### training dataset for pretrained version
 
 DATA_ROOT_ARGS=--data-path
 

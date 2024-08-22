@@ -42,7 +42,7 @@ def main(
     add_eos_token: bool,
     group_by_length: bool,  # faster, but produces an odd training loss curve
     # wandb params
-    wandb_project: str,
+    wandb_project: str, # The wandb project name, if wandb is active
     wandb_run_name: str,
     wandb_watch: str,  # options: false | gradients | all
     wandb_log_model: str,  # options: false | true
@@ -63,6 +63,9 @@ def main(
 ):
     assert base_model_name_or_path
 
+    # save_dir = f"{output_dir}/{prompt_template_name}_{peft_type}"
+    # if not os.path.exists(save_dir):
+    #     os.makedirs(save_dir)
     folder_idx = 0
     while True:
         save_dir = f"{output_dir}/{prompt_template_name}_{peft_type}_{'{:0>3}'.format(str(folder_idx))}"

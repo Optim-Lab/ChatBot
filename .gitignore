@@ -163,7 +163,6 @@ cython_debug/
 
 __pycache__/
 wandb/
-assets/data/*
 *.zip
 logs/
 *.bin
@@ -176,4 +175,4 @@ etc/
 py-hanspell/
 *.DS_Store
 chatGPT_api_key.txt
-# data/
+models/pretrained
