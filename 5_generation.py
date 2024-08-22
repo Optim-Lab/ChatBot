@@ -109,7 +109,6 @@ inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
 sequence = inputs['input_ids'].to('cuda:0')
 
 """top-K sampling"""
-# idx is (B, T) array of indices in the current context
 for i in range(max_new_tokens):
     # get the predictions
     with torch.no_grad():
@@ -118,10 +117,10 @@ for i in range(max_new_tokens):
             input_ids=inputs['input_ids'],
             attention_mask=inputs['attention_mask'],
             use_cache=False
-        )
+        ) # [batch_size, T, vocab_size] (prediction of next token)
         
-    # focus only on the last time step
-    logits = output.logits[:, -1, :] # becomes (B, C)    
+    # focus only on the last time step (last generated token)
+    logits = output.logits[:, -1, :] # [batch_size, vocab_size]
     # Only keep top-1 + top-K indices
     topk_logits = torch.cat(
         [torch.topk(l, k)[0][[-1]].unsqueeze(0) 
@@ -130,10 +129,10 @@ for i in range(max_new_tokens):
     logits[indices_to_remove] = torch.tensor(float('-inf')).to('cuda:0')
     # Convert logits to probabilities
     probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to('cuda:0')
-    # Sample n tokens from the resulting distribution
-    idx_next = torch.multinomial(probabilities, num_samples=1).to('cuda:0') # (B, 1)
+    # Sample n=1 tokens from the resulting distribution
+    idx_next = torch.multinomial(probabilities, num_samples=1).to('cuda:0') # [batch_size, 1]
     # append sampled index to the running sequence
-    sequence = torch.cat((sequence, idx_next), dim=1) # (B, T+1)
+    sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
     
     # get updated inputs
     next_inputs = [tokenizer.decode(s) for s in sequence]
@@ -142,6 +141,7 @@ for i in range(max_new_tokens):
     if sequence[0, -1] == eos_token_id: ### stopping criterion
         break
 
+### post-processing (extract only response)
 output = [tokenizer.decode(s) for s in sequence]
 output = [prompter_uos.get_response(out) for out in output]
 output = [out.split(tokenizer.eos_token)[0] for out in output]
