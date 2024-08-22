@@ -1,5 +1,5 @@
 {
-  "data_path": "./assets/data/pretrained/training_data.json",
+  "data_path": "./assets/data/training_data.json",
   "output_dir": "./models",
   "batch_size": 128,
   "micro_batch_size": 4,

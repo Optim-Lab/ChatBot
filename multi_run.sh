@@ -18,7 +18,7 @@ DATA_ROOT_ARGS=--data-path
 DEFAULT_NAME=KorANI
 
 # python argparse source for experiments
-# experiments="--num-epochs 3"
+# experiments="--num-epochs 3" ### NO WANDB
 experiments="--num-epochs 3 --wandb-project huggingface" ### use WANDB
 # experiments=(
 # "--num-epochs 3"
