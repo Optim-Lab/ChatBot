@@ -63,9 +63,6 @@ def main(
 ):
     assert base_model_name_or_path
 
-    # save_dir = f"{output_dir}/{prompt_template_name}_{peft_type}"
-    # if not os.path.exists(save_dir):
-    #     os.makedirs(save_dir)
     folder_idx = 0
     while True:
         save_dir = f"{output_dir}/{prompt_template_name}_{peft_type}_{'{:0>3}'.format(str(folder_idx))}"

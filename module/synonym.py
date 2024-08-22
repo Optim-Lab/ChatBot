@@ -65,8 +65,8 @@ def chat(sample, cred="./assets/cred/chatGPT_api_key.txt"):
     
     return response
 #%%
-sample = "3D 창작터 운영 및 관리"
-response = chat(sample)
-response_message = response.choices[0]["message"]["content"]
-response_message = response_message.split('\n')
+# sample = "3D 창작터 운영 및 관리"
+# response = chat(sample)
+# response_message = response.choices[0]["message"]["content"]
+# response_message = response_message.split('\n')
 #%%
