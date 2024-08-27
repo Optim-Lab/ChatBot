@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # virutal environment directory
-ENV=/home1/seunghwan/miniconda3/envs/llm/bin/python
+ENV=/home1/seunghwan/miniconda3/envs/llm1/bin/python
 
 # file directory of multiple execution source ".sh"
 RUN_SRC=./run_src.sh

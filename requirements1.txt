@@ -81,7 +81,7 @@ orjson==3.10.7
 packaging==24.1
 pandas==2.2.2
 parso==0.8.4
-peft==0.3.0.dev0
+git+https://github.com/huggingface/peft.git@e536616888d51b453ed354a6f1e243fecb02ea08
 pexpect==4.9.0
 pillow==10.4.0
 pip==24.2
