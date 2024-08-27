@@ -175,4 +175,4 @@ etc/
 py-hanspell/
 *.DS_Store
 chatGPT_api_key.txt
-models/pretrained
+models

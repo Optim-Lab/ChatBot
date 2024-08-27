@@ -27,8 +27,8 @@ with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
 #%%
 load_8bit = True
 base_model= "beomi/KoAlpaca-Polyglot-5.8B"
-# lora_weights = "./models/korani_LORA_000"
-lora_weights = "./models/pretrained/korani_LORA_pretrained" ### pretrained
+lora_weights = "./models/korani_LORA_003"
+# lora_weights = "./models/pretrained/korani_LORA_pretrained" ### pretrained
 
 base_model = base_model or os.environ.get("BASE_MODEL", "")
 assert (
@@ -90,11 +90,8 @@ prompter = Prompter("koalpaca")
 prompter_uos = Prompter("korani")
 #%%
 """fine-tuning result"""
+# instruction = "연구비 관리을 담당하는 분은 누구입니까?"
 instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
-# "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?",
-# "중앙구매 담당자는 누구인가요?",
-# "연구 윤리 관련 담당자 알려주세요.",
-# "공과대 소속 연구자인데, 연구 과제 계획서 제출관련은 누구 담당이야?",
 batch_size=3 # for multiple answers
 input=None
 temperature=0.5
@@ -201,8 +198,8 @@ with torch.no_grad():
 output = tokenizer.decode(generation_output.sequences[0])
 output = prompter.get_response(output)
 """remove end token"""
-if tokenizer._eos_token.content in output:
-    result = output.replace(tokenizer._eos_token.content, "")
+if tokenizer._eos_token in output:
+    result = output.replace(tokenizer._eos_token, "")
 
 print(result)
 #%%
