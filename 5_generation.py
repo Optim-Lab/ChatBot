@@ -27,7 +27,7 @@ with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
 #%%
 load_8bit = True
 base_model= "beomi/KoAlpaca-Polyglot-5.8B"
-lora_weights = "./models/korani_LORA_005"
+lora_weights = "./models/korani_LORA_001"
 # lora_weights = "./models/pretrained/korani_LORA_pretrained" ### pretrained
 
 base_model = base_model or os.environ.get("BASE_MODEL", "")
