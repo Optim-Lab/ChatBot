@@ -24,7 +24,8 @@ except:  # noqa: E722
 #%%
 load_8bit: bool = True
 base_model: str = "beomi/KoAlpaca-Polyglot-5.8B"
-lora_weights: str = "./models/korani_LORA_pretrained" # pretrained
+lora_weights = "./models/korani_LORA_001"
+# lora_weights: str = "./models/korani_LORA_pretrained" ### pretrained
 server_name: str = "0.0.0.0"
 share_gradio: bool = True
 base_model = base_model or os.environ.get("BASE_MODEL", "")
@@ -32,7 +33,7 @@ assert (
     base_model
 ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
 #%%
-data_dir = "./assets/data"
+data_dir = "./assets/data/pretrained"
 with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
     default_work = json.load(f)
 #%%
