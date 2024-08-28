@@ -90,8 +90,8 @@ prompter = Prompter("koalpaca")
 prompter_uos = Prompter("korani")
 #%%
 """fine-tuning result"""
-# instruction = "연구비 관리을 담당하는 분은 누구입니까?"
-instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
+instruction = "연구비 관리을 담당하는 분은 누구입니까?"
+# instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
 batch_size=3 # for multiple answers
 input=None
 temperature=0.5
@@ -164,7 +164,8 @@ else:
 print(result)
 #%%
 """original model result"""
-instruction = "점심 메뉴 추천해줘." # "딥러닝이 뭐야?",
+# instruction = "점심 메뉴 추천해줘."
+instruction = "딥러닝이 뭐야?"
 input=None
 max_new_tokens=512
 pad_token_id=tokenizer.pad_token_id
