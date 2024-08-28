@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # virutal environment directory
-ENV=~/anaconda3/envs/lm/bin/python
+ENV=~/anaconda3/envs/llm/bin/python
 
 # file directory of experiment ".py"
 EXECUTION_FILE=/home/optim1/ChatBot/4_finetune.py
