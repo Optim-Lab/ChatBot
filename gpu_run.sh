@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # virutal environment directory
-ENV=~/anaconda3/envs/lm/bin/python
+ENV=~/anaconda3/envs/llm/bin/python
 
 # file directory of experiment ".py"
-EXECUTION_FILE=/home/optim1/ChatBot/4_finetune.py
+EXECUTION_FILE=/home/optim1/ChatBot-main/4_finetune.py
 
 # DATA_ROOT=./assets/data/training_data.json
 DATA_ROOT=./assets/data/pretrained/training_data.json ### training dataset for pretrained version

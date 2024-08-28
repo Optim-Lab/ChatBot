@@ -27,14 +27,15 @@ try:
 except:  # noqa: E722
     pass
 #%%
-data_dir = "./assets/data"
+data_dir = "./assets/data/pretrained"
 with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
     default_work = json.load(f)
 #%%
 def evaluation(
     load_8bit: bool = True,
     base_model: str = "beomi/KoAlpaca-Polyglot-5.8B",
-    lora_weights: str = "./models/korani_LORA_pretrained", # pretrained
+    lora_weights = "./models/korani_LORA_001",
+    # lora_weights: str = "./models/korani_LORA_pretrained", ### pretrained
 ):
     #%%
     base_model = base_model or os.environ.get("BASE_MODEL", "")
@@ -218,7 +219,7 @@ def evaluation(
         print()
     #%%
     """load test data"""
-    data_dir = "./assets/data"
+    data_dir = "./data"
     test_df = pd.read_csv(f"{data_dir}/testset_v1.csv", encoding='utf-8')
     #%%
     score = []
@@ -245,7 +246,7 @@ def evaluation(
             answer))
     #%%
     np.save(
-        f"./assets/etc/topk_{lora_weights.split('/')[-1]}_inference_time", 
+        f"./assets/{lora_weights.split('/')[-1]}_inference_time", 
         np.array([x[-2] for x in score]))
     #%%
     with open(lora_weights + "/train_config.json", "r") as f:
@@ -270,4 +271,8 @@ def evaluation(
 #%%
 if __name__ == '__main__':
     fire.Fire(evaluation)
+#%%
+# import matplotlib.pyplot as plt
+# times = np.load("./assets/korani_LORA_001_inference_time.npy")
+# plt.hist(times, bins="scott")
 #%%
