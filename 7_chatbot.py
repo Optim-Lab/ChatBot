@@ -221,51 +221,25 @@ gr.Interface(
     fn=evaluate,
     inputs=[
         gr.components.Textbox(
-            lines=2,
-            label="Instruction",
+            lines=2, ### input을 입력할 box의 크기를 결정
+            label="Instruction", ### box의 이름
             placeholder="(질문 예시) 중앙구매 담당자는 누구인가요?", 
         ),
         gr.components.Checkbox(
-            value=True,
+            value=True, ### check box의 default value
             label="서울시립대학교의 업무분장표에 관한 질문을 하기 위해서는 check 표시를 해주세요!"),
-        gr.components.Slider(
-            minimum=-1, maximum=1, step=1, value=0, label="대답에 따라서 점수를 주세요! (-1점, 0점, 1점)"
-        ),
-        # gr.components.Slider(
-        #     minimum=1, maximum=3, step=1, value=1, label="여러개의 답변을 듣고 싶으신 경우 값을 선택해주세요! (1개 ~ 3개)"
-        # ),
-        # gr.components.Textbox(
-        #     lines=2, label="Input", placeholder="none"),
-        # gr.components.Slider(
-        #     minimum=0, maximum=1, value=0.1, label="Temperature"
-        # ),
-        # gr.components.Slider(
-        #     minimum=0, maximum=1, value=0.9, label="Top p"
-        # ),
-        # gr.components.Slider(
-        #     minimum=0, maximum=100, step=1, value=5, label="Top k"
-        # ),
-        # gr.components.Slider(
-        #     minimum=1, maximum=4, step=1, value=2, label="Beams"
-        # ),
-        # gr.components.Slider(
-        #     minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
-        # ),
-        # gr.components.Checkbox(label="Stream output"),
     ],
     outputs=[
         gr.inputs.Textbox(
-            lines=5,
-            label="Output",
+            lines=5, ### output을 출력할 box의 크기를 결정
+            label="Output", ### box의 이름
         )
     ],
-    title="[서울시립대학교 업무분장표 ChatBot] v.0",
+    title="[서울시립대학교 업무분장표 ChatBot]",
     description="""
     Instruction-tuning을 활용한 Large Language Model 기반의 특정 도메인 맞춤형 챗봇 개발
     """,
-    # allow_flagging="auto",
 ).queue().launch(server_name=server_name, share=share_gradio, server_port=7860)
-# ).queue().launch(server_name="localhost", share=share_gradio)
 #%%
 # if __name__ == "__main__":
 #     fire.Fire(main)
