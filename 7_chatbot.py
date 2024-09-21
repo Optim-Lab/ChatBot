@@ -1,5 +1,9 @@
 #%%
 import os
+# Set the environment variable to limit visible GPUs
+gpu_idx = 0
+os.environ["CUDA_VISIBLE_DEVICES"] = f"{gpu_idx}"
+#%%
 import sys
 import json
 import pandas as pd
@@ -223,7 +227,7 @@ gr.Interface(
         gr.components.Textbox(
             lines=2, ### input을 입력할 box의 크기를 결정
             label="Instruction", ### box의 이름
-            placeholder="(질문 예시) 중앙구매 담당자는 누구인가요?", 
+            placeholder="", 
         ),
         gr.components.Checkbox(
             value=True, ### check box의 default value

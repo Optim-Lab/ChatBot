@@ -21,6 +21,7 @@ from module.model.lora import build_model
 from module.utils import build_cfgs
 #%%
 def main(
+    gpu_idx: int,
     # model and data
     base_model_name_or_path: str,
     data_path: str,
@@ -76,7 +77,7 @@ def main(
 
     prompter = Prompter(prompt_template_name)
     
-    device_map={'': 0}
+    device_map={'': gpu_idx}
     world_size = 1
     ddp = world_size != 1 ### False
     # device_map = "auto"

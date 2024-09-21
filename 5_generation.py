@@ -1,5 +1,9 @@
 #%%
 import os
+# Set the environment variable to limit visible GPUs
+gpu_idx = 0
+os.environ["CUDA_VISIBLE_DEVICES"] = f"{gpu_idx}"
+#%%
 import sys
 import json
 
@@ -27,7 +31,7 @@ with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
 #%%
 load_8bit = True
 base_model= "beomi/KoAlpaca-Polyglot-5.8B"
-lora_weights = "./models/korani_LORA_001"
+lora_weights = "./models/korani_LORA_000"
 # lora_weights = "./models/pretrained/korani_LORA_pretrained" ### pretrained
 
 base_model = base_model or os.environ.get("BASE_MODEL", "")
@@ -90,7 +94,7 @@ prompter = Prompter("koalpaca")
 prompter_uos = Prompter("korani")
 #%%
 """fine-tuning result"""
-instruction = "연구비 관리을 담당하는 분은 누구입니까?"
+instruction = "연구비 관리를 담당하는 분은 누구입니까?"
 # instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
 batch_size=3 # for multiple answers
 input=None
@@ -103,7 +107,7 @@ eos_token_id=tokenizer.eos_token_id
 torch.manual_seed(2) # fixed seed
 prompt = prompter_uos.generate_prompt(instruction, input)
 inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
-sequence = inputs['input_ids'].to('cuda:0')
+sequence = inputs['input_ids'].to(device)
 
 """top-K sampling"""
 for i in range(max_new_tokens):
@@ -123,11 +127,11 @@ for i in range(max_new_tokens):
         [torch.topk(l, k)[0][[-1]].unsqueeze(0) 
         for l, k in zip(logits, [1] + [topk] * (batch_size-1))], dim=0)
     indices_to_remove = logits < topk_logits
-    logits[indices_to_remove] = torch.tensor(float('-inf')).to('cuda:0')
+    logits[indices_to_remove] = torch.tensor(float('-inf')).to(device)
     # Convert logits to probabilities
-    probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to('cuda:0')
+    probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to(device)
     # Sample n=1 tokens from the resulting distribution
-    idx_next = torch.multinomial(probabilities, num_samples=1).to('cuda:0') # [batch_size, 1]
+    idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # [batch_size, 1]
     # append sampled index to the running sequence
     sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
     

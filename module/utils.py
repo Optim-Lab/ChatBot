@@ -8,6 +8,7 @@ from datetime import datetime
 
 def build_cfgs(root="."):
     parser = argparse.ArgumentParser()
+    parser.add_argument("--gpu-idx", dest="gpu_idx", type=int)
     parser.add_argument("--base-model-name-or-path", dest="base_model_name_or_path", type=str)
     parser.add_argument("--bias", dest="bias")
     parser.add_argument("--enable-lora", dest="enable_lora")

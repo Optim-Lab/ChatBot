@@ -34,15 +34,15 @@ with open(f"{data_dir}/default_work.json", "r", encoding="utf-8") as f:
 def evaluation(
     load_8bit: bool = True,
     base_model: str = "beomi/KoAlpaca-Polyglot-5.8B",
-    lora_weights = "./models/korani_LORA_001",
+    lora_weights = "./models/korani_LORA_000",
     # lora_weights: str = "./models/korani_LORA_pretrained", ### pretrained
 ):
-    #%%
+    
     base_model = base_model or os.environ.get("BASE_MODEL", "")
     assert (
         base_model
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
-    #%%
+    
     """load model"""
     if device == "cuda":
         model = AutoModelForCausalLM.from_pretrained(
@@ -87,16 +87,16 @@ def evaluation(
     model.eval()
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
-    #%%
+    
     """tokenizer"""
     tokenizer = AutoTokenizer.from_pretrained(base_model)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
-    #%%
+    
     """prompter"""
     prompter = Prompter("koalpaca")
     prompter_uos = Prompter("korani")
-    #%%
+    
     def evaluate(
         instruction,
         uos=True,
@@ -114,7 +114,7 @@ def evaluation(
             
             prompt = prompter_uos.generate_prompt(instruction, input)
             inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
-            sequence = inputs['input_ids'].to('cuda:0')
+            sequence = inputs['input_ids'].to(device)
             
             """top-K sampling"""
             # idx is (B, T) array of indices in the current context
@@ -135,11 +135,11 @@ def evaluation(
                     [torch.topk(l, k)[0][[-1]].unsqueeze(0) 
                     for l, k in zip(logits, [1] + [topk] * (batch_size-1))], dim=0)
                 indices_to_remove = logits < topk_logits
-                logits[indices_to_remove] = torch.tensor(float('-inf')).to('cuda:0')
+                logits[indices_to_remove] = torch.tensor(float('-inf')).to(device)
                 # Convert logits to probabilities
-                probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to('cuda:0')
+                probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to(device)
                 # Sample n tokens from the resulting distribution
-                idx_next = torch.multinomial(probabilities, num_samples=1).to('cuda:0') # (B, 1)
+                idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # (B, 1)
                 # append sampled index to the running sequence
                 sequence = torch.cat((sequence, idx_next), dim=1) # (B, T+1)
                 
@@ -203,7 +203,7 @@ def evaluation(
             if tokenizer._eos_token in output:
                 result = output.replace(tokenizer._eos_token, "")
         return result
-    #%%
+    
     """Cherry picking"""
     for instruction in [
         "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?",
@@ -217,11 +217,11 @@ def evaluation(
         print()
         print(pred)
         print()
-    #%%
+    
     """load test data"""
     data_dir = "./data"
     test_df = pd.read_csv(f"{data_dir}/testset_v1.csv", encoding='utf-8')
-    #%%
+    
     score = []
     each_score = np.zeros((5, ))
     each_len = test_df.groupby('type').count()['output'].to_list()
@@ -244,14 +244,14 @@ def evaluation(
             pred, 
             end - start,
             answer))
-    #%%
+    
     np.save(
         f"./assets/{lora_weights.split('/')[-1]}_inference_time", 
         np.array([x[-2] for x in score]))
-    #%%
+    
     with open(lora_weights + "/train_config.json", "r") as f:
         train_config = json.load(f)
-    #%%
+    
     for x in score:
         if x[-1] == 0:
             print('Instruction:', x[0])
@@ -270,9 +270,10 @@ def evaluation(
     pprint.pprint(train_config)
 #%%
 if __name__ == '__main__':
-    fire.Fire(evaluation)
+    fire.Fire(evaluation) ### with multiple trained models
 #%%
+# import numpy as np
 # import matplotlib.pyplot as plt
-# times = np.load("./assets/korani_LORA_001_inference_time.npy")
+# times = np.load("./assets/korani_LORA_000_inference_time.npy")
 # plt.hist(times, bins="scott")
 #%%

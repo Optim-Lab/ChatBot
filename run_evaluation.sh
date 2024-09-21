@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Set the GPU index
+gpu_idx=0
+
+# Export the environment variable
+export CUDA_VISIBLE_DEVICES="${gpu_idx}"
+
+# virutal environment directory
+ENV=/home/seunghwan/anaconda3/envs/llm/bin/python
+
+EXECUTION_FILE=/home/seunghwan/ChatBot/6_evaluation.py
+
+experiments=(
+"--lora_weights ./models/korani_LORA_000"
+# "--lora_weights ./models/korani_LORA_001"
+# "--lora_weights ./models/korani_LORA_002"
+)
+
+for index in ${!experiments[*]}; do
+    $ENV $EXECUTION_FILE ${experiments[$index]}
+    # sleep 60
+done

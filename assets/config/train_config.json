@@ -1,4 +1,5 @@
 {
+  "gpu_idx": 0,
   "data_path": "./assets/data/training_data.json",
   "output_dir": "./models",
   "batch_size": 128,
