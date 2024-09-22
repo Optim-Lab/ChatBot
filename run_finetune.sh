@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # virutal environment directory
-ENV=/home/seunghwan/anaconda3/envs/llm0/bin/python
+ENV=/home/seunghwan/anaconda3/envs/llm/bin/python
 
 EXECUTION_FILE=/home/seunghwan/ChatBot/4_finetune.py
 
@@ -14,10 +14,10 @@ GPU_ARGS=--gpu-idx
 
 experiments=(
 "--num-epochs 3 --wandb-project huggingface" 
-# "--num-epochs 3 --wandb-project huggingface --base-model-name-or-path beomi/KoAlpaca-Polyglot-5.8B"  
+# "--num-epochs 3 --wandb-project huggingface --base-model-name-or-path beomi/KoAlpaca-Polyglot-12.8B"  
 )
 
 for index in ${!experiments[*]}; do
-    $ENV $EXECUTION_FILE ${experiments[$index]} $DATA_ROOT_ARGS $DATA_ROOT $GPU_ARGS 1
+    $ENV $EXECUTION_FILE ${experiments[$index]} $DATA_ROOT_ARGS $DATA_ROOT $GPU_ARGS 0
     # sleep 60
 done

@@ -28,7 +28,7 @@ except:  # noqa: E722
 #%%
 load_8bit: bool = True
 base_model: str = "beomi/KoAlpaca-Polyglot-5.8B"
-lora_weights = "./models/korani_LORA_001"
+lora_weights = "./models/korani_LORA_000"
 # lora_weights: str = "./models/korani_LORA_pretrained" ### pretrained
 server_name: str = "0.0.0.0"
 share_gradio: bool = True
