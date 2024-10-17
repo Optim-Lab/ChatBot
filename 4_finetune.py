@@ -204,7 +204,7 @@ if __name__ == "__main__":
     with open(f"{save_dir}/train_config.json", "w", encoding="utf-8") as f:
         json.dump(train_cfgs, f, ensure_ascii=False, indent=4)
 #%%
-"""학습 데이터 확인"""
+# """학습 데이터 확인"""
 # prompt_template_name = "korani"
 # prompter = Prompter(prompt_template_name)
 
@@ -214,6 +214,28 @@ if __name__ == "__main__":
 # if tokenizer.pad_token_id is None:
 #     tokenizer.pad_token_id = tokenizer.eos_token_id
 
+# ### data preprocessing
+# # 1. load train dataset (json format)
+# from datasets import load_dataset
+# data = load_dataset("json", data_files="./assets/data/training_data.json")
+# print(data)
+
+# # 2. for each sample
+# from module.data_pipeline.preprocessor import generate_and_tokenize_prompt
+# data_point = next(iter(data["train"]))
+# print(data_point)
+# train_data_point = generate_and_tokenize_prompt(
+#     cutoff_len=256, 
+#     tokenizer=tokenizer, 
+#     prompter=prompter, 
+#     train_on_inputs=False, 
+#     add_eos_token=False, 
+#     data_point=data_point
+# )
+# print(train_data_point)
+# print(train_data_point.keys())
+
+# # 3. for all data samples, apply 1) and 2)
 # train_data, val_data = split_dataset(
 #     data_path="./assets/data/training_data.json",
 #     val_set_size=512,
@@ -225,9 +247,14 @@ if __name__ == "__main__":
 #     seed=42,
 # )
 
+# ### preprocessed train dataset
 # sample = next(iter(train_data)) ### 실제 input
 
+# print(sample.keys())
+
 # tokenizer.decode(sample["input_ids"]) ### 실제 input의 decode 결과
+
+# sample["labels"] ### LLM에게 주어지는 부분과 실제로 예측해야하는 부분을 나누어주는 라벨
 
 # tokenizer.decode([sample["input_ids"][i] for i, x in enumerate(sample["labels"]) if x == -100]) ### LLM에게 주어지는 부분
 
