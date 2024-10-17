@@ -69,6 +69,8 @@ with open(f"{data_dir}/augmented_work.json", "w", encoding="utf-8") as f:
 
 print(f"Augmented samples number: {len(augmented)}")
 #%%
+augmented
+#%%
 def generate_templates(inst): # random sampling
     return random.sample([
         f"{inst}을 담당하는 분은 누구입니까?",
@@ -101,6 +103,8 @@ for i, (name, inst) in tqdm(enumerate(augmented.items())):
 with open(f"{data_dir}/training_dict.json", "w", encoding="utf-8") as f:
     json.dump(training_dict, f, ensure_ascii=False, indent=4)
 #%%
+training_dict
+#%%
 """
 Feature Engineering - build instruction-tuning dataset using 9 basic templates
 """
@@ -121,4 +125,6 @@ with open(f"{data_dir}/training_data.json", "w", encoding="utf-8") as f:
     json.dump(training_data, f, ensure_ascii=False, indent=4)
     
 print(f"Initial samples number: {len(training_data)}")
+#%%
+training_data
 #%%

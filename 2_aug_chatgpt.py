@@ -17,6 +17,11 @@ filename = "default_work"
 with open(f"{data_dir}/{filename}.json", "r", encoding="utf-8") as f:
     default_work = json.load(f)
 #%%
+name, inst = list(default_work.items())[0]
+inst_split = [x[:-1] for x in inst.split('- ') if len(x)] 
+syn_list, response = generate_synonym(inst_split[0])
+response
+#%%
 """
 Feature Engineering - build synonym
 """
