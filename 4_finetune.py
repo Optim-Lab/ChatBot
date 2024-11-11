@@ -214,28 +214,6 @@ if __name__ == "__main__":
 # if tokenizer.pad_token_id is None:
 #     tokenizer.pad_token_id = tokenizer.eos_token_id
 
-# ### data preprocessing
-# # 1. load train dataset (json format)
-# from datasets import load_dataset
-# data = load_dataset("json", data_files="./assets/data/training_data.json")
-# print(data)
-
-# # 2. for each sample
-# from module.data_pipeline.preprocessor import generate_and_tokenize_prompt
-# data_point = next(iter(data["train"]))
-# print(data_point)
-# train_data_point = generate_and_tokenize_prompt(
-#     cutoff_len=256, 
-#     tokenizer=tokenizer, 
-#     prompter=prompter, 
-#     train_on_inputs=False, 
-#     add_eos_token=False, 
-#     data_point=data_point
-# )
-# print(train_data_point)
-# print(train_data_point.keys())
-
-# # 3. for all data samples, apply 1) and 2)
 # train_data, val_data = split_dataset(
 #     data_path="./assets/data/training_data.json",
 #     val_set_size=512,

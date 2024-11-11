@@ -98,18 +98,77 @@ instruction = "연구비 관리를 담당하는 분은 누구입니까?"
 # instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
 batch_size=3 # for multiple answers
 input=None
-temperature=0.5
+
 topk=5
+topp=0.8
+temperature=0.5
+
 max_new_tokens=512
 pad_token_id=tokenizer.pad_token_id
 eos_token_id=tokenizer.eos_token_id
-
+#%%
+"""1. Greedy sampling"""
 torch.manual_seed(2) # fixed seed
 prompt = prompter_uos.generate_prompt(instruction, input)
 inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
 sequence = inputs['input_ids'].to(device)
 
-"""top-K sampling"""
+for i in range(max_new_tokens):
+    # get the predictions
+    with torch.no_grad():
+        model.float()
+        output = model.base_model(
+            input_ids=inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            use_cache=False
+        ) # [batch_size, T, vocab_size] (prediction of next token)
+        
+    # focus only on the last time step (last generated token)
+    logits = output.logits[:, -1, :] # [batch_size, vocab_size]
+    # Get the index of the token with the highest probability
+    idx_next = torch.argmax(logits, dim=-1).unsqueeze(-1) # [batch_size, 1]
+    # append sampled index to the running sequence
+    sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
+    
+    # get updated inputs
+    next_inputs = [tokenizer.decode(s) for s in sequence]
+    inputs = tokenizer(next_inputs, return_tensors="pt")
+    
+    if sequence[0, -1] == eos_token_id: ### stopping criterion
+        break
+
+### post-processing (extract only response)
+output = [tokenizer.decode(s) for s in sequence]
+output = [prompter_uos.get_response(out) for out in output]
+output = [out.split(tokenizer.eos_token)[0] for out in output]
+
+outputs = []
+for out in output:
+    """add manual response"""
+    for key, value in default_work.items():
+        if key in out:
+            out += '\n' + value
+            break
+    outputs.append(out)
+# outputs = list(set(outputs)) # remove duplicated outputs
+    
+if len(outputs) > 1:
+    result = ""
+    for i, output in enumerate(outputs):
+        result += f"[답변 {i+1}]\n"
+        result += output + "\n\n"
+else:
+    result = outputs[0]
+
+greedy_result = result
+print(greedy_result)
+#%%
+"""2. top-K sampling"""
+torch.manual_seed(2) # fixed seed
+prompt = prompter_uos.generate_prompt(instruction, input)
+inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
+sequence = inputs['input_ids'].to(device)
+
 for i in range(max_new_tokens):
     # get the predictions
     with torch.no_grad():
@@ -124,12 +183,14 @@ for i in range(max_new_tokens):
     logits = output.logits[:, -1, :] # [batch_size, vocab_size]
     # Only keep top-1 + top-K indices
     topk_logits = torch.cat(
-        [torch.topk(l, k)[0][[-1]].unsqueeze(0) 
-        for l, k in zip(logits, [1] + [topk] * (batch_size-1))], dim=0)
+        [
+            torch.topk(l, k)[0][[-1]].unsqueeze(0) 
+            for l, k in zip(logits, [1] + [topk] * (batch_size-1))
+        ], dim=0)
     indices_to_remove = logits < topk_logits
     logits[indices_to_remove] = torch.tensor(float('-inf')).to(device)
     # Convert logits to probabilities
-    probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to(device)
+    probabilities = (logits / temperature).softmax(dim=-1).to(device)
     # Sample n=1 tokens from the resulting distribution
     idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # [batch_size, 1]
     # append sampled index to the running sequence
@@ -155,7 +216,7 @@ for out in output:
             out += '\n' + value
             break
     outputs.append(out)
-outputs = list(set(outputs))
+# outputs = list(set(outputs)) # remove duplicated outputs
     
 if len(outputs) > 1:
     result = ""
@@ -165,7 +226,89 @@ if len(outputs) > 1:
 else:
     result = outputs[0]
 
-print(result)
+top_k_result = result
+print(top_k_result)
+#%%
+"""3. top-p sampling"""
+torch.manual_seed(2) # fixed seed
+prompt = prompter_uos.generate_prompt(instruction, input)
+inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
+sequence = inputs['input_ids'].to(device)
+
+for i in range(max_new_tokens):
+    # get the predictions
+    with torch.no_grad():
+        model.float()
+        output = model.base_model(
+            input_ids=inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            use_cache=False
+        ) # [batch_size, T, vocab_size] (prediction of next token)
+        
+    # focus only on the last time step (last generated token)
+    logits = output.logits[:, -1, :] # [batch_size, vocab_size]
+    # Convert logits to probabilities
+    """temperature sampling is utilized"""
+    probs = (logits / 5).softmax(dim=-1).to(device) # temperature tau = 5
+    # probs.max()
+    # probs = (logits / 1).softmax(dim=-1).to(device) # temperature tau = 1
+    # probs.max()
+    # Sort the probabilities in descending order
+    sorted_probs, sorted_indices = torch.sort(probs, descending=True, dim=-1)
+    # get the cumulative sum of probabilities
+    cumsum_probs = sorted_probs.cumsum(dim=1).to(device)
+    # Mask out tokens that don't belong to the top-p set
+    sorted_indices_to_remove = cumsum_probs > topp
+    logits[sorted_indices_to_remove] = torch.tensor(float('-inf')).to(device)
+    # Convert logits to probabilities
+    probabilities = (logits / temperature).softmax(dim=-1).to(device)
+    # Sample n=1 tokens from the resulting distribution
+    idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # [batch_size, 1]
+    # append sampled index to the running sequence
+    sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
+    
+    # get updated inputs
+    next_inputs = [tokenizer.decode(s) for s in sequence]
+    inputs = tokenizer(next_inputs, return_tensors="pt")
+    
+    if sequence[0, -1] == eos_token_id: ### stopping criterion
+        break
+
+### post-processing (extract only response)
+output = [tokenizer.decode(s) for s in sequence]
+output = [prompter_uos.get_response(out) for out in output]
+output = [out.split(tokenizer.eos_token)[0] for out in output]
+
+outputs = []
+for out in output:
+    """add manual response"""
+    for key, value in default_work.items():
+        if key in out:
+            out += '\n' + value
+            break
+    outputs.append(out)
+# outputs = list(set(outputs)) # remove duplicated outputs
+    
+if len(outputs) > 1:
+    result = ""
+    for i, output in enumerate(outputs):
+        result += f"[답변 {i+1}]\n"
+        result += output + "\n\n"
+else:
+    result = outputs[0]
+
+top_p_result = result
+print(top_p_result)
+#%%
+"""Check the results"""
+print("\n======Greedy sampling:======")
+print(greedy_result)
+
+print("\n======top-K sampling:======")
+print(top_k_result)
+
+print("\n======top-p sampling:======")
+print(top_p_result)
 #%%
 """original model result"""
 # instruction = "점심 메뉴 추천해줘."
