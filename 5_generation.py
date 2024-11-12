@@ -96,7 +96,7 @@ prompter_uos = Prompter("korani")
 """fine-tuning result"""
 instruction = "연구비 관리를 담당하는 분은 누구입니까?"
 # instruction = "R&D기반조성사업 관련 문의는 누구에게 해야 하나요?"
-batch_size=3 # for multiple answers
+batch_size=10 # for multiple answers
 input=None
 
 topk=5
@@ -122,7 +122,7 @@ for i in range(max_new_tokens):
             attention_mask=inputs['attention_mask'],
             use_cache=False
         ) # [batch_size, T, vocab_size] (prediction of next token)
-        
+
     # focus only on the last time step (last generated token)
     logits = output.logits[:, -1, :] # [batch_size, vocab_size]
     # Get the index of the token with the highest probability
@@ -181,7 +181,7 @@ for i in range(max_new_tokens):
         
     # focus only on the last time step (last generated token)
     logits = output.logits[:, -1, :] # [batch_size, vocab_size]
-    # Only keep top-1 + top-K indices
+    # Only keep top-1 + top-K indices 
     topk_logits = torch.cat(
         [
             torch.topk(l, k)[0][[-1]].unsqueeze(0) 
@@ -250,15 +250,21 @@ for i in range(max_new_tokens):
     # Convert logits to probabilities
     """temperature sampling is utilized"""
     probs = (logits / 5).softmax(dim=-1).to(device) # temperature tau = 5
-    # probs.max()
+    # probs.max(dim=1)
     # probs = (logits / 1).softmax(dim=-1).to(device) # temperature tau = 1
-    # probs.max()
+    # probs.max(dim=1)
     # Sort the probabilities in descending order
     sorted_probs, sorted_indices = torch.sort(probs, descending=True, dim=-1)
     # get the cumulative sum of probabilities
     cumsum_probs = sorted_probs.cumsum(dim=1).to(device)
     # Mask out tokens that don't belong to the top-p set
     sorted_indices_to_remove = cumsum_probs > topp
+    sorted_indices_to_remove_ = torch.gather(
+        sorted_indices_to_remove,
+        1,
+        sorted_indices
+    )
+    (probs * sorted_indices_to_remove_.to(torch.float)).sum(dim=1)
     logits[sorted_indices_to_remove] = torch.tensor(float('-inf')).to(device)
     # Convert logits to probabilities
     probabilities = (logits / temperature).softmax(dim=-1).to(device)
