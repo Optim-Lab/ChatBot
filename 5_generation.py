@@ -247,31 +247,29 @@ for i in range(max_new_tokens):
         
     # focus only on the last time step (last generated token)
     logits = output.logits[:, -1, :] # [batch_size, vocab_size]
+    # Sort the logits in descending order
+    sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
     # Convert logits to probabilities
     """temperature sampling is utilized"""
-    probs = (logits / 5).softmax(dim=-1).to(device) # temperature tau = 5
-    # probs.max(dim=1)
-    # probs = (logits / 1).softmax(dim=-1).to(device) # temperature tau = 1
-    # probs.max(dim=1)
-    # Sort the probabilities in descending order
-    sorted_probs, sorted_indices = torch.sort(probs, descending=True, dim=-1)
-    # get the cumulative sum of probabilities
-    cumsum_probs = sorted_probs.cumsum(dim=1).to(device)
+    sorted_probs = (sorted_logits / 5).softmax(dim=-1).to(device) # temperature tau = 5
+    # sorted_probs.max(dim=1)
+    # sorted_probs = (sorted_logits / 1).softmax(dim=-1).to(device) # temperature tau = 1
+    # sorted_probs.max(dim=1)
     # Mask out tokens that don't belong to the top-p set
-    sorted_indices_to_remove = cumsum_probs > topp
-    sorted_indices_to_remove_ = torch.gather(
-        sorted_indices_to_remove,
-        1,
-        sorted_indices
-    )
-    (probs * sorted_indices_to_remove_.to(torch.float)).sum(dim=1)
-    logits[sorted_indices_to_remove] = torch.tensor(float('-inf')).to(device)
+    sorted_indices_to_remove = sorted_probs.cumsum(dim=1) > topp
+    sorted_logits[sorted_indices_to_remove] = torch.tensor(float('-inf')).to(device)
+    # Reverse the logits back to their original positions
+    logits = torch.gather(sorted_logits, 1, sorted_indices.argsort(dim=-1))
     # Convert logits to probabilities
     probabilities = (logits / temperature).softmax(dim=-1).to(device)
     # Sample n=1 tokens from the resulting distribution
     idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # [batch_size, 1]
     # append sampled index to the running sequence
     sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
+    
+    ### check top-p sampling
+    # sorted_probs[sorted_indices_to_remove] = 0.
+    # torch.gather(sorted_probs, 1, sorted_indices.argsort(dim=-1)).sum(dim=1)
     
     # get updated inputs
     next_inputs = [tokenizer.decode(s) for s in sequence]
