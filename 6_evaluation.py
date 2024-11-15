@@ -1,5 +1,8 @@
 #%%
 import os
+# Set the environment variable to limit visible GPUs
+gpu_idx = 0
+os.environ["CUDA_VISIBLE_DEVICES"] = f"{gpu_idx}"
 import sys
 import time
 import json
@@ -97,9 +100,8 @@ def evaluation(
     prompter = Prompter("koalpaca")
     prompter_uos = Prompter("korani")
     
-    def evaluate(
+    def sampling(
         instruction,
-        uos=True,
         batch_size=3, # for multiple answers
         input=None,
         temperature=0.5,
@@ -109,99 +111,70 @@ def evaluation(
         pad_token_id=tokenizer.pad_token_id,
         eos_token_id=tokenizer.eos_token_id,
     ):
-        if uos:
-            torch.manual_seed(2) # fixed seed
-            
-            prompt = prompter_uos.generate_prompt(instruction, input)
-            inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
-            sequence = inputs['input_ids'].to(device)
-            
-            """top-K sampling"""
-            # idx is (B, T) array of indices in the current context
-            for i in range(max_new_tokens):
-                # get the predictions
-                with torch.no_grad():
-                    model.float()
-                    output = model.base_model(
-                        input_ids=inputs['input_ids'],
-                        attention_mask=inputs['attention_mask'],
-                        use_cache=False
-                    )
-                    
-                # focus only on the last time step
-                logits = output.logits[:, -1, :] # becomes (B, C)    
-                # Only keep top-1 + top-K indices
-                topk_logits = torch.cat(
-                    [torch.topk(l, k)[0][[-1]].unsqueeze(0) 
-                    for l, k in zip(logits, [1] + [topk] * (batch_size-1))], dim=0)
-                indices_to_remove = logits < topk_logits
-                logits[indices_to_remove] = torch.tensor(float('-inf')).to(device)
-                # Convert logits to probabilities
-                probabilities = torch.nn.functional.softmax(logits / temperature, dim=-1).to(device)
-                # Sample n tokens from the resulting distribution
-                idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # (B, 1)
-                # append sampled index to the running sequence
-                sequence = torch.cat((sequence, idx_next), dim=1) # (B, T+1)
-                
-                # get updated inputs
-                next_inputs = [tokenizer.decode(s) for s in sequence]
-                inputs = tokenizer(next_inputs, return_tensors="pt")
-                
-                if sequence[0, -1] == eos_token_id:
-                    break
-
-            output = [tokenizer.decode(s) for s in sequence]
-            output = [prompter_uos.get_response(out) for out in output]
-            output = [out.split(tokenizer.eos_token)[0] for out in output]
-
-            outputs = []
-            for out in output:
-                """add manual response"""
-                for key, value in default_work.items():
-                    if key in out:
-                        out += '\n' + value
-                        break
-                outputs.append(out)
-            outputs = list(set(outputs))
-                
-            if len(outputs) > 1:
-                result = ""
-                for i, output in enumerate(outputs):
-                    result += f"[답변 {i+1}]\n"
-                    result += output + "\n\n"
-            else:
-                result = outputs[0]
-            
-        else: # hard-coded
-            prompt = prompter.generate_prompt(instruction, input)
-            inputs = tokenizer(prompt, return_tensors="pt")
-            input_ids = inputs["input_ids"].to(device)
-            generation_config = GenerationConfig(
-                do_sample=True, #####
-                temperature=0.7,
-                top_p=0.8,
-                num_beams=1,
-                pad_token_id=pad_token_id,
-                eos_token_id=eos_token_id,
-            )
-
-            # Without streaming
+        torch.manual_seed(2) # fixed seed
+        
+        prompt = prompter_uos.generate_prompt(instruction, input)
+        inputs = tokenizer([prompt] * batch_size, return_tensors="pt")
+        sequence = inputs['input_ids'].to(device)
+        
+        """top-K sampling"""
+        # idx is (B, T) array of indices in the current context
+        for i in range(max_new_tokens):
+            # get the predictions
             with torch.no_grad():
                 model.float()
-                generation_output = model.generate(
-                    do_sample=True, #####
-                    input_ids=input_ids,
-                    generation_config=generation_config,
-                    return_dict_in_generate=True,
-                    output_scores=True,
-                    max_new_tokens=max_new_tokens,
+                output = model.base_model(
+                    input_ids=inputs['input_ids'],
+                    attention_mask=inputs['attention_mask'],
+                    use_cache=False
                 )
+                
+            # focus only on the last time step (last generated token)
+            logits = output.logits[:, -1, :] # [batch_size, vocab_size]
+            # Only keep top-1 + top-K indices 
+            topk_logits = torch.cat(
+                [
+                    torch.topk(l, k)[0][[-1]].unsqueeze(0) 
+                    for l, k in zip(logits, [1] + [topk] * (batch_size-1))
+                ], dim=0)
+            indices_to_remove = logits < topk_logits
+            logits[indices_to_remove] = torch.tensor(float('-inf')).to(device)
+            # Convert logits to probabilities
+            probabilities = (logits / temperature).softmax(dim=-1).to(device)
+            # Sample n=1 tokens from the resulting distribution
+            idx_next = torch.multinomial(probabilities, num_samples=1).to(device) # [batch_size, 1]
+            # append sampled index to the running sequence
+            sequence = torch.cat((sequence, idx_next), dim=1) # [batch_size, T+1]
             
-            output = tokenizer.decode(generation_output.sequences[0])
-            output = prompter.get_response(output)
-            """remove end token"""
-            if tokenizer._eos_token in output:
-                result = output.replace(tokenizer._eos_token, "")
+            # get updated inputs
+            next_inputs = [tokenizer.decode(s) for s in sequence]
+            inputs = tokenizer(next_inputs, return_tensors="pt")
+            
+            if sequence[0, -1] == eos_token_id: ### stopping criterion
+                break
+
+        output = [tokenizer.decode(s) for s in sequence]
+        output = [prompter_uos.get_response(out) for out in output]
+        output = [out.split(tokenizer.eos_token)[0] for out in output]
+
+        outputs = []
+        for out in output:
+            """add manual response"""
+            for key, value in default_work.items():
+                if key in out:
+                    out += '\n' + value
+                    break
+            outputs.append(out)
+        outputs = list(set(outputs))
+            
+        if len(outputs) > 1:
+            result = ""
+            for i, output in enumerate(outputs):
+                result += f"[답변 {i+1}]\n"
+                result += output + "\n\n"
+        else:
+            result = outputs[0]
+            
         return result
     
     """Cherry picking"""
@@ -212,7 +185,7 @@ def evaluation(
         "공과대 소속 연구자인데, 연구 과제 계획서 제출관련은 누구 담당이야?",
         "도과대 연구자입니다. 연구 지원금 담당자는 누구인가요?"
     ]:
-        pred = evaluate(instruction)
+        pred = sampling(instruction)
         print('instruction:', instruction)
         print()
         print(pred)
@@ -230,7 +203,7 @@ def evaluation(
         instruction = test_df['instruction'].iloc[i]
         
         start = time.time()
-        pred = evaluate(instruction)
+        pred = sampling(instruction)
         end = time.time()
         
         answer = float(any([name in pred for name in target.split(", ")]))
@@ -276,4 +249,5 @@ if __name__ == '__main__':
 # import matplotlib.pyplot as plt
 # times = np.load("./assets/korani_LORA_000_inference_time.npy")
 # plt.hist(times, bins="scott")
+# plt.show()
 #%%
